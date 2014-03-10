@@ -9,3 +9,11 @@ Abstract
 Windows8の 終了操作があまりにもめんどくさいので作りました。
 
 ※ .NET Framework4があれば、Windows8以外でも使えます。
+
+Binary Files
+=======================
+[Vector](http://www.vector.co.jp/soft/winnt/util/se499624.html)に置いてます。
+
+Build Status
+======================
+-[![Build status](https://ci.appveyor.com/api/projects/status/ognw66vplvm3i476)](https://ci.appveyor.com/project/dck-jp/systemtoolsforwin8)
