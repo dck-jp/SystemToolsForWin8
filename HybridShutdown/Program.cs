@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 
-namespace Reboot
+namespace HybridShutdown
 {
     class Program
     {
         public enum ExitWindows : uint
         {
+            EWX_HYBRID_SHUTDOWN = 0x00400000,
             EWX_LOGOFF = 0x00,
             EWX_SHUTDOWN = 0x01,
             EWX_REBOOT = 0x02,
@@ -78,10 +82,40 @@ namespace Reboot
                 tokenHandle, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
         }
 
+        [DllImport("kernel32.dll")]
+        static extern uint FormatMessage(
+          uint dwFlags, IntPtr lpSource,
+          uint dwMessageId, uint dwLanguageId,
+          StringBuilder lpBuffer, int nSize,
+          IntPtr Arguments);
+        private const uint FORMAT_MESSAGE_FROM_SYSTEM = 0x00001000;
+
         static void Main(string[] args)
         {
             AdjustToken();
-            ExitWindowsEx(ExitWindows.EWX_REBOOT | ExitWindows.EWX_FORCE, 0);
+            WriteDebugFile(Marshal.GetLastWin32Error());
+
+            ExitWindowsEx(ExitWindows.EWX_HYBRID_SHUTDOWN | ExitWindows.EWX_SHUTDOWN, 0);
+            WriteDebugFile(Marshal.GetLastWin32Error());
+        }
+
+        private static void WriteDebugFile(int errorNumber)
+        {
+            if (errorNumber == 0) return;
+
+            StringBuilder message = new StringBuilder(255);
+            var errorMessage = FormatMessage(
+              FORMAT_MESSAGE_FROM_SYSTEM,
+              IntPtr.Zero,
+              (uint)errorNumber,
+              0,
+              message,
+              message.Capacity,
+              IntPtr.Zero);
+            var path = Environment.SpecialFolder.Desktop + @"\debug.log";
+
+            File.WriteAllText(path,
+                string.Format(@"%0 \t %1 : %2", DateTime.Now, errorNumber, errorMessage));
         }
     }
 }
